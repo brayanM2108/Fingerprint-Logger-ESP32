@@ -1,18 +1,27 @@
 #include <Adafruit_Fingerprint.h>  //Libreria para usar el sensor de huella
 #include <Preferences.h>           //Libreria para usar la memoria del esp
-
+#include <WiFi.h>                  
+#include <HTTPClient.h>
 #define RX_HUELLA 17  //Pin RX del sensor
 #define TX_HUELLA 16  //Pin TX del sensor
 
+
+const char* ssid = ""; //El nombre de la red WIFI (5G no sirve)
+const char* password = "";    //Clave de la red WIFI
+const char* GOOGLE_SHEETS_URL = "";// URL de la implementacion web
+
+ 
 const int botonEnrolar = 18;  //Boton para activar la funcion de enrolar
 const int botonBuscar = 19;   //Boton para activar la funcion de buscar
 
+const int ledConfirmacion = 21; //Led para confirmar si la informacion fue enviada correctamente
 const int ledEnrolar = 22;  //Led para saber si la funcion de enrolar esta activa
 const int ledBuscar = 23;   //Led para saber si la funcion de buscar esta activa
 
 HardwareSerial Serial_Huella(1);
 Adafruit_Fingerprint finger = Adafruit_Fingerprint(&Serial_Huella);
 
+//Crea un objeto de la clase Preferences para guardar el nombre en la memoria flash del esp
 Preferences prefs;
 String readStringFromSerial() {
   String input = "";
@@ -45,6 +54,16 @@ bool estadoAnteriorBoton = HIGH; //estado para saber el estado del boton
 void setup() {
 
   Serial.begin(115200);
+
+  //Verificar la conexion WIFI
+  WiFi.begin(ssid, password);
+  Serial.print("Conectando a WiFi");
+  while (WiFi.status() != WL_CONNECTED) { 
+  delay(500);
+  Serial.print(".");
+}
+  Serial.println("\nConectado a WiFi");
+
   Serial_Huella.begin(57600, SERIAL_8N1, RX_HUELLA, TX_HUELLA);
 
   prefs.begin("nombre", false);
@@ -71,13 +90,8 @@ void setup() {
   //Configurar leds
   pinMode(ledEnrolar, OUTPUT);
   pinMode(ledBuscar, OUTPUT);
+  pinMode(ledConfirmacion, OUTPUT);
 
-
-
-  //Conectar con PLX DAQ
- 
-  Serial.println("LABEL, FECHA, HORA, ID, NOMBRE");  //Columnas en el excel
-  Serial.println("RESETTIMER");
 }
 
 //Se usaran dos botones para usar las funcionalidades
@@ -111,6 +125,37 @@ void loop() {
     Serial.println("Botón Enrolar presionado");
     EnrolarPersonal(); delay(500);
     }
+}
+
+void enviarDatos(int id, String nombre) {
+  if (WiFi.status() == WL_CONNECTED) {
+    HTTPClient http;
+    http.begin(GOOGLE_SHEETS_URL);  
+    http.addHeader("Content-Type", "application/json");
+
+    String json = "{\"id\": " + String(id) + ", \"nombre\": \"" + nombre + "\"}";
+    Serial.println("➡ Enviando JSON: " + json);
+
+    int httpCode = http.POST(json);
+    String respuesta = http.getString();
+
+    Serial.println("✅ Código de respuesta: " + String(httpCode));
+  
+    // Parpadeo LED como confirmación
+    if (httpCode == 200) {
+      digitalWrite(ledConfirmacion, HIGH);
+      delay(500);
+      digitalWrite(ledConfirmacion, LOW);
+      delay(400);
+      digitalWrite(ledConfirmacion, HIGH);
+      delay(500);
+      digitalWrite(ledConfirmacion, LOW);
+    }
+
+    http.end();
+  } else {
+    Serial.println("❌ WiFi no conectado");
+  }
 }
 
 uint8_t readnumber(void) {
@@ -239,12 +284,10 @@ int buscarFingerprintID() {
 }
 
 
-
+//Imprime el usuario encontrado y envia los datos al sheets
 void Mostrar_Alumno(byte ID, String Nombre) {
-  Serial.print("DATA, DATE, TIME,");
-  Serial.print(ID);
-  Serial.print(",");
-  Serial.println(Nombre);
   Serial.print("\nBienvenido a clase, ");
   Serial.println(Nombre + "\n");
+  // Enviar datos a Google Sheets
+  enviarDatos(ID, Nombre);
 }
