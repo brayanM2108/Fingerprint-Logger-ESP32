@@ -29,7 +29,7 @@ El sistema envía los datos registrados (fecha, hora, ID y nombre) automáticame
 - ✅ESP32 (cualquier modelo con WIFI).
 - ✅Sensor de huellas digitales compatible con la librería Adafruit_Fingerprint (En este caso use el modelo Fpm10a).
 
-- ✅3 botones pulsadores:
+- ✅2 botones pulsadores:
   - Enrolar huella
   - Activar/desactivar modo búsqueda
 - ✅3 LEDs :
