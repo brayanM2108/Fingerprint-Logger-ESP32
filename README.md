@@ -1,6 +1,6 @@
 # Sistema de Asistencia con Huella Digital
 
-Este proyecto permite registrar, buscar y autenticar personas mediante huella digital utilizando un **ESP32** y un sensor de huellas.
+Este proyecto permite registrar, buscar y autenticar personas utilizando un **ESP32** y un sensor de huellas.
 El sistema envía los datos registrados (fecha, hora, ID y nombre) automáticamente a Google Sheets a través de una implementación Web App en Google Apps Script, lo que permite un control de asistencia en tiempo real.
 
 
