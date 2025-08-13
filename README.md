@@ -59,7 +59,7 @@ El sistema envía los datos registrados (fecha, hora, ID y nombre) automáticame
 
 1. Clona este repositorio:
 ```bash
-git clone https://github.com/tu-usuario/tu-repo.git
+git clone https://github.com/brayanM2108/Fingerprint-Logger-ESP32
 ```
 2. Instala las librerías necesarias en el IDE de Arduino:
 
